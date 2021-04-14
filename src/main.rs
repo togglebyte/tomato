@@ -73,9 +73,17 @@ fn main() {
                 viewport.draw_widget(&text, ScreenPos::zero());
                 renderer.render(&mut viewport);
             }
-            Event::Key(KeyEvent { code: KeyCode::Enter, ..  }) => return,
-            Event::Key(KeyEvent { code: KeyCode::Esc, ..  }) => return,
-            Event::Key(KeyEvent { code: KeyCode::Char('c'), modifiers  }) if modifiers.contains(KeyModifiers::CONTROL) => return,
+            Event::Key(KeyEvent {
+                code: KeyCode::Enter,
+                ..
+            }) => return,
+            Event::Key(KeyEvent {
+                code: KeyCode::Esc, ..
+            }) => return,
+            Event::Key(KeyEvent {
+                code: KeyCode::Char('c'),
+                modifiers,
+            }) if modifiers.contains(KeyModifiers::CONTROL) => return,
             _ => {}
         }
     }
