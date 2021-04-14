@@ -46,12 +46,12 @@ fn main() {
                     match state {
                         State::Work => {
                             state = State::Chill;
-                            time = Duration::new(chill_min * 6, 0);
+                            time = Duration::new(chill_min * 60, 0);
                             spinner = Spinner::beep();
                         }
                         State::Chill => {
                             state = State::Work;
-                            time = Duration::new(work_min * 6, 0);
+                            time = Duration::new(work_min * 60, 0);
                             spinner = Spinner::default();
                         }
                     }
