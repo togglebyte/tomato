@@ -35,7 +35,7 @@ fn main() {
     let mut now = Instant::now();
     let mut state = State::Work;
 
-    let mut spinner = Spinner::florp();
+    let mut spinner = Spinner::default();
 
     for event in events(EventModel::Fps(1 * spinner.animation.len() as u64)) {
         match event {
@@ -88,28 +88,18 @@ struct Spinner {
 impl Spinner {
     fn default() -> Spinner {
         Spinner {
-            animation: vec!['⠁', '⠂', '⠄', '⡀', '⢀', '⠠', '⠐', '⠈'],
+            animation: vec!['⠢', '⠒', '⠔', '⠤'],
             current_frame: 0,
         }
     }
-    fn some_other() -> Spinner {
+
+    fn beep() -> Spinner {
         Spinner {
-            animation: vec!['◢', '◣', '◤', '◥'],
+            animation: vec!['⠶', ' '],
             current_frame: 0,
         }
     }
-    fn some() -> Spinner {
-        Spinner {
-            animation: vec!['⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'],
-            current_frame: 0,
-        }
-    }
-    fn florp() -> Spinner {
-        Spinner {
-            animation: vec!['⠓', '⠚', '⠙', '⠛'],
-            current_frame: 0,
-        }
-    }
+
     fn next_frame(&mut self) -> &char {
         let c = self.animation.get(self.current_frame).unwrap();
         self.current_frame += 1;
