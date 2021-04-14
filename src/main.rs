@@ -1,7 +1,7 @@
 use std::env;
 use std::time::{Duration, Instant};
 
-use tinybit::events::{events, Event, EventModel, KeyCode, KeyEvent};
+use tinybit::events::{events, Event, EventModel, KeyCode, KeyEvent, KeyModifiers};
 use tinybit::render::{Renderer, StdoutTarget};
 use tinybit::widgets::Text;
 use tinybit::{term_size, Color, ScreenPos, ScreenSize, Viewport};
@@ -73,10 +73,9 @@ fn main() {
                 viewport.draw_widget(&text, ScreenPos::zero());
                 renderer.render(&mut viewport);
             }
-            Event::Key(KeyEvent {
-                code: KeyCode::Enter,
-                ..
-            }) => return,
+            Event::Key(KeyEvent { code: KeyCode::Enter, ..  }) => return,
+            Event::Key(KeyEvent { code: KeyCode::Esc, ..  }) => return,
+            Event::Key(KeyEvent { code: KeyCode::Char('c'), modifiers  }) if modifiers.contains(KeyModifiers::CONTROL) => return,
             _ => {}
         }
     }
