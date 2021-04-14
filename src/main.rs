@@ -46,31 +46,42 @@ fn main() {
                     match state {
                         State::Work => {
                             state = State::Chill;
-                            time = Duration::new(chill_min * 60, 0);
+                            time = Duration::new(chill_min * 6, 0);
+                            spinner = Spinner::beep();
                         }
                         State::Chill => {
                             state = State::Work;
-                            time = Duration::new(work_min * 60, 0);
+                            time = Duration::new(work_min * 6, 0);
+                            spinner = Spinner::default();
                         }
                     }
                 }
 
-                let colour = match state {
-                    State::Work => None,
-                    State::Chill => Some(Color::Green),
+                let spinner_colour = match state {
+                    State::Work => (Some(Color::Green), Some(Color::Black)),
+                    State::Chill => (Some(Color::Green), Some(Color::Black)),
+                    //State::Chill => Some(Color::Red),
                 };
 
-                let text = Text::new(
-                    format!(
-                        " {}[{:02}:{:02}]",
-                        spinner.next_frame(),
-                        time.as_secs() / 60,
-                        time.as_secs() % 60
-                    ),
-                    colour,
-                    None,
+                let colour = match state {
+                    State::Work => (None, Some(Color::Black)),
+                    State::Chill => (Some(Color::Black), Some(Color::Green)),
+                };
+
+                let spinner_text = Text::new(
+                    format!("{}[     ]", spinner.next_frame()),
+                    spinner_colour.0,
+                    spinner_colour.1,
                 );
-                viewport.draw_widget(&text, ScreenPos::zero());
+
+                let text = Text::new(
+                    format!("{:02}:{:02}", time.as_secs() / 60, time.as_secs() % 60),
+                    colour.0,
+                    colour.1,
+                );
+
+                viewport.draw_widget(&spinner_text, ScreenPos::new(1, 0));
+                viewport.draw_widget(&text, ScreenPos::new(3, 0));
                 renderer.render(&mut viewport);
             }
             Event::Key(KeyEvent {
