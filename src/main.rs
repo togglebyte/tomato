@@ -1,10 +1,10 @@
 use std::env;
-use std::time::{Instant, Duration};
+use std::time::{Duration, Instant};
 
 use tinybit::events::{events, Event, EventModel, KeyCode, KeyEvent};
 use tinybit::render::{Renderer, StdoutTarget};
-use tinybit::{term_size, ScreenPos, ScreenSize, Viewport, Color};
 use tinybit::widgets::Text;
+use tinybit::{term_size, Color, ScreenPos, ScreenSize, Viewport};
 
 enum State {
     Work,
@@ -12,10 +12,16 @@ enum State {
 }
 
 fn main() {
-    let work_min = env::args().skip(1).next().expect("provide some minutes please");
+    let work_min = env::args()
+        .skip(1)
+        .next()
+        .expect("provide some minutes please");
     let work_min = work_min.parse::<u64>().unwrap_or(20);
 
-    let chill_min = env::args().skip(2).next().expect("provide some minutes please");
+    let chill_min = env::args()
+        .skip(2)
+        .next()
+        .expect("provide some minutes please");
     let chill_min = chill_min.parse::<u64>().unwrap_or(5);
 
     let (width, _) = term_size().unwrap();
@@ -29,7 +35,9 @@ fn main() {
     let mut now = Instant::now();
     let mut state = State::Work;
 
-    for event in events(EventModel::Fps(1)) {
+    let mut spinner = Spinner::florp();
+
+    for event in events(EventModel::Fps(1 * spinner.animation.len() as u64)) {
         match event {
             Event::Tick => {
                 time -= now.elapsed();
@@ -52,14 +60,63 @@ fn main() {
                     State::Chill => Some(Color::Green),
                 };
 
-                let text = Text::new(format!(" M: {} S: {}", time.as_secs() / 60, time.as_secs() % 60), colour, None);
+                let text = Text::new(
+                    format!(
+                        " {}[{:02}:{:02}]",
+                        spinner.next_frame(),
+                        time.as_secs() / 60,
+                        time.as_secs() % 60
+                    ),
+                    colour,
+                    None,
+                );
                 viewport.draw_widget(&text, ScreenPos::zero());
                 renderer.render(&mut viewport);
             }
             Event::Key(KeyEvent {
-                code: KeyCode::Esc, ..
+                code: KeyCode::Enter,
+                ..
             }) => return,
             _ => {}
         }
+    }
+}
+
+struct Spinner {
+    animation: Vec<char>,
+    current_frame: usize,
+}
+impl Spinner {
+    fn default() -> Spinner {
+        Spinner {
+            animation: vec!['⠁', '⠂', '⠄', '⡀', '⢀', '⠠', '⠐', '⠈'],
+            current_frame: 0,
+        }
+    }
+    fn some_other() -> Spinner {
+        Spinner {
+            animation: vec!['◢', '◣', '◤', '◥'],
+            current_frame: 0,
+        }
+    }
+    fn some() -> Spinner {
+        Spinner {
+            animation: vec!['⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'],
+            current_frame: 0,
+        }
+    }
+    fn florp() -> Spinner {
+        Spinner {
+            animation: vec!['⠓', '⠚', '⠙', '⠛'],
+            current_frame: 0,
+        }
+    }
+    fn next_frame(&mut self) -> &char {
+        let c = self.animation.get(self.current_frame).unwrap();
+        self.current_frame += 1;
+        if self.current_frame > self.animation.len() - 1 {
+            self.current_frame = 0;
+        }
+        return c;
     }
 }
