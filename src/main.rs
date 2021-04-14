@@ -12,16 +12,25 @@ enum State {
 }
 
 fn main() {
+    if env::args().len() == 1 {
+        println!("Usage:");
+        println!(
+            "{} [work-minutes] [break-minutes]",
+            env::args().next().unwrap()
+        );
+        return;
+    }
+
     let work_min = env::args()
         .skip(1)
         .next()
-        .expect("provide some minutes please");
+        .expect("Provide workperiod length in minutes");
     let work_min = work_min.parse::<u64>().unwrap_or(20);
 
     let chill_min = env::args()
         .skip(2)
         .next()
-        .expect("provide some minutes please");
+        .expect("Provide breakperiod length in minutes");
     let chill_min = chill_min.parse::<u64>().unwrap_or(5);
 
     let (width, _) = term_size().unwrap();
@@ -121,10 +130,12 @@ impl Spinner {
 
     fn next_frame(&mut self) -> &char {
         let c = self.animation.get(self.current_frame).unwrap();
+
         self.current_frame += 1;
+
         if self.current_frame > self.animation.len() - 1 {
             self.current_frame = 0;
         }
-        return c;
+        c
     }
 }
