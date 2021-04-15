@@ -12,16 +12,25 @@ enum State {
 }
 
 fn main() {
+    if env::args().len() == 1 {
+        println!("Usage:");
+        println!(
+            "{} [work-minutes] [break-minutes]",
+            env::args().next().unwrap()
+        );
+        return;
+    }
+
     let work_min = env::args()
         .skip(1)
         .next()
-        .expect("provide some minutes please");
+        .expect("Provide workperiod length in minutes");
     let work_min = work_min.parse::<u64>().unwrap_or(20);
 
     let chill_min = env::args()
         .skip(2)
         .next()
-        .expect("provide some minutes please");
+        .expect("Provide breakperiod length in minutes");
     let chill_min = chill_min.parse::<u64>().unwrap_or(5);
 
     let (width, _) = term_size().unwrap();
@@ -35,7 +44,7 @@ fn main() {
     let mut now = Instant::now();
     let mut state = State::Work;
 
-    let mut spinner = Spinner::florp();
+    let mut spinner = Spinner::default();
 
     for event in events(EventModel::Fps(1 * spinner.animation.len() as u64)) {
         match event {
@@ -47,35 +56,54 @@ fn main() {
                         State::Work => {
                             state = State::Chill;
                             time = Duration::new(chill_min * 60, 0);
+                            spinner = Spinner::beep();
                         }
                         State::Chill => {
                             state = State::Work;
                             time = Duration::new(work_min * 60, 0);
+                            spinner = Spinner::default();
                         }
                     }
                 }
 
-                let colour = match state {
-                    State::Work => None,
-                    State::Chill => Some(Color::Green),
+                let spinner_colour = match state {
+                    State::Work => (Some(Color::Green), Some(Color::Black)),
+                    State::Chill => (Some(Color::Green), Some(Color::Black)),
+                    //State::Chill => Some(Color::Red),
                 };
 
-                let text = Text::new(
-                    format!(
-                        " {}[{:02}:{:02}]",
-                        spinner.next_frame(),
-                        time.as_secs() / 60,
-                        time.as_secs() % 60
-                    ),
-                    colour,
-                    None,
+                let colour = match state {
+                    State::Work => (None, Some(Color::Black)),
+                    State::Chill => (Some(Color::Black), Some(Color::Green)),
+                };
+
+                let spinner_text = Text::new(
+                    format!("{}[     ]", spinner.next_frame()),
+                    spinner_colour.0,
+                    spinner_colour.1,
                 );
-                viewport.draw_widget(&text, ScreenPos::zero());
+
+                let text = Text::new(
+                    format!("{:02}:{:02}", time.as_secs() / 60, time.as_secs() % 60),
+                    colour.0,
+                    colour.1,
+                );
+
+                viewport.draw_widget(&spinner_text, ScreenPos::new(1, 0));
+                viewport.draw_widget(&text, ScreenPos::new(3, 0));
                 renderer.render(&mut viewport);
             }
-            Event::Key(KeyEvent { code: KeyCode::Enter, ..  }) => return,
-            Event::Key(KeyEvent { code: KeyCode::Esc, ..  }) => return,
-            Event::Key(KeyEvent { code: KeyCode::Char('c'), modifiers  }) if modifiers.contains(KeyModifiers::CONTROL) => return,
+            Event::Key(KeyEvent {
+                code: KeyCode::Enter,
+                ..
+            }) => return,
+            Event::Key(KeyEvent {
+                code: KeyCode::Esc, ..
+            }) => return,
+            Event::Key(KeyEvent {
+                code: KeyCode::Char('c'),
+                modifiers,
+            }) if modifiers.contains(KeyModifiers::CONTROL) => return,
             _ => {}
         }
     }
@@ -88,34 +116,26 @@ struct Spinner {
 impl Spinner {
     fn default() -> Spinner {
         Spinner {
-            animation: vec!['⠁', '⠂', '⠄', '⡀', '⢀', '⠠', '⠐', '⠈'],
+            animation: vec!['⠢', '⠒', '⠔', '⠤'],
             current_frame: 0,
         }
     }
-    fn some_other() -> Spinner {
+
+    fn beep() -> Spinner {
         Spinner {
-            animation: vec!['◢', '◣', '◤', '◥'],
+            animation: vec!['⠶', ' '],
             current_frame: 0,
         }
     }
-    fn some() -> Spinner {
-        Spinner {
-            animation: vec!['⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'],
-            current_frame: 0,
-        }
-    }
-    fn florp() -> Spinner {
-        Spinner {
-            animation: vec!['⠓', '⠚', '⠙', '⠛'],
-            current_frame: 0,
-        }
-    }
+
     fn next_frame(&mut self) -> &char {
         let c = self.animation.get(self.current_frame).unwrap();
+
         self.current_frame += 1;
+
         if self.current_frame > self.animation.len() - 1 {
             self.current_frame = 0;
         }
-        return c;
+        c
     }
 }
