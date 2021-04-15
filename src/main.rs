@@ -74,6 +74,7 @@ fn main() {
                             state = State::Work;
                             time = Duration::new(work_min * 60, 0);
                             spinner = Spinner::default();
+                            beep_command.as_mut().map(|bc| bc.spawn());
                         }
                     }
                 }
