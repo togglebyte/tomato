@@ -1,5 +1,6 @@
 use std::env;
 use std::time::{Duration, Instant};
+use std::process::Command;
 
 use tinybit::events::{events, Event, EventModel, KeyCode, KeyEvent, KeyModifiers};
 use tinybit::render::{Renderer, StdoutTarget};
@@ -9,6 +10,14 @@ use tinybit::{term_size, Color, ScreenPos, ScreenSize, Viewport};
 enum State {
     Work,
     Chill,
+}
+
+fn get_beep_command() -> Option<Command> {
+    let command = env::args().skip(3).next()?;
+    let args = env::args().skip(4).collect::<Vec<_>>();
+    let mut command = Command::new(command);
+    command.args(args);
+    Some(command)
 }
 
 fn main() {
@@ -32,6 +41,8 @@ fn main() {
         .next()
         .expect("Provide breakperiod length in minutes");
     let chill_min = chill_min.parse::<u64>().unwrap_or(5);
+    
+    let mut beep_command = get_beep_command();
 
     let (width, _) = term_size().unwrap();
 
@@ -57,6 +68,7 @@ fn main() {
                             state = State::Chill;
                             time = Duration::new(chill_min * 60, 0);
                             spinner = Spinner::beep();
+                            beep_command.as_mut().map(|bc| bc.spawn());
                         }
                         State::Chill => {
                             state = State::Work;
@@ -69,7 +81,6 @@ fn main() {
                 let spinner_colour = match state {
                     State::Work => (Some(Color::Green), Some(Color::Black)),
                     State::Chill => (Some(Color::Green), Some(Color::Black)),
-                    //State::Chill => Some(Color::Red),
                 };
 
                 let colour = match state {
@@ -128,14 +139,15 @@ impl Spinner {
         }
     }
 
-    fn next_frame(&mut self) -> &char {
-        let c = self.animation.get(self.current_frame).unwrap();
+    fn next_frame(&mut self) -> char {
+        let frame = self.current_frame;
 
         self.current_frame += 1;
 
         if self.current_frame > self.animation.len() - 1 {
             self.current_frame = 0;
         }
-        c
+
+        self.animation[frame]
     }
 }
