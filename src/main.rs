@@ -135,7 +135,7 @@ impl Spinner {
 
     fn beep() -> Spinner {
         Spinner {
-            animation: vec!['⠶', ' '],
+            animation: vec!['⠶'],
             current_frame: 0,
         }
     }
